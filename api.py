@@ -4,7 +4,6 @@ from flask_cors import CORS
 import os
 
 from routes.facebook import facebook_bp
-from routes.youtube import youtube_bp
 from routes.instagram import instagram_bp
 from routes.tiktok import tiktok_bp
 from routes.twitter import twitter_bp
@@ -17,7 +16,6 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}}) 
 
 app.register_blueprint(facebook_bp)
-app.register_blueprint(youtube_bp)
 app.register_blueprint(instagram_bp)
 app.register_blueprint(tiktok_bp)
 app.register_blueprint(twitter_bp)
