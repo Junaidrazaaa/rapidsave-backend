@@ -1,4 +1,3 @@
-# routes/youtube.py
 from flask import Blueprint, request, jsonify, send_file
 from yt_dlp import YoutubeDL
 import os
@@ -6,7 +5,7 @@ from datetime import datetime
 
 youtube_bp = Blueprint('youtube', __name__)
 
-# Local downloads folder
+# Local downloads folder creation
 DOWNLOAD_DIR = os.path.join(os.getcwd(), 'downloads')
 if not os.path.exists(DOWNLOAD_DIR):
     os.makedirs(DOWNLOAD_DIR)
@@ -25,16 +24,22 @@ def download_youtube():
 
     try:
         ydl_opts = {
-            # Render/Local dono ke liye best format bina FFmpeg ke
+            # Bina FFmpeg ke best format
             'format': 'best[ext=mp4]/best',
             'outtmpl': os.path.join(temp_dir, '%(title).50s.%(ext)s'),
             'nocheckcertificate': True,
             'quiet': False,
-            # Bot bypass settings
-            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'no_warnings': False,
+            # Enhanced headers to mimic a real browser
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+            },
+            # iOS and Android clients bypass many restrictions
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android'],
+                    'player_client': ['ios', 'android'],
                     'player_skip': ['webpage', 'configs'],
                 }
             }
@@ -45,10 +50,12 @@ def download_youtube():
         
         files = os.listdir(temp_dir)
         if not files:
-            return jsonify({"message": "YouTube blocked the request or download failed"}), 400
+            # Clear error message for frontend
+            return jsonify({"message": "YouTube blocked the request or the link is invalid. Please try again."}), 400
             
         return send_file(os.path.join(temp_dir, files[0]), as_attachment=True)
 
     except Exception as e:
+        # Logs mein error check karne ke liye
         print(f"!!! YOUTUBE DOWNLOAD ERROR: {str(e)}")
-        return jsonify({"message": str(e)}), 500
+        return jsonify({"message": "Server error while processing YouTube video."}), 500
